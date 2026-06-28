@@ -3,6 +3,7 @@ import { verifyWebhookSignature } from '@/lib/github/webhook-verify';
 import { getRepoByFullName, upsertRepo } from '@/lib/db/repos';
 import { createScanJob } from '@/lib/db/scan-jobs';
 import { isCiRelevantPath } from '@/lib/security/rules/types';
+import { pool } from '@/lib/db/connection';
 
 // Required for HMAC verification — must read raw bytes, not parsed JSON
 export const runtime = 'nodejs';
@@ -72,6 +73,15 @@ async function handlePush(body: GitHubPushPayload) {
   if (!repo) {
     console.log(`[webhook] repo ${repoFullName} not found in DB — skipping`);
     return;
+  }
+
+  // Keep installation_id in sync — GitHub includes it on every push event
+  const pushInstallationId: number | undefined = body.installation?.id;
+  if (pushInstallationId && repo.installation_id !== pushInstallationId) {
+    await pool.query(`UPDATE repos SET installation_id=$1, updated_at=NOW() WHERE id=$2`,
+      [pushInstallationId, repo.id]);
+    console.log(`[webhook] updated installation_id for ${repoFullName}: ${repo.installation_id} → ${pushInstallationId}`);
+    repo.installation_id = pushInstallationId;
   }
 
   if (!repo.is_security_enrolled) {
@@ -154,6 +164,7 @@ interface GitHubPushPayload {
   ref: string;
   after: string;
   repository: { full_name: string; default_branch: string };
+  installation?: { id: number };
   pusher?: { name: string };
   commits?: Array<{ added?: string[]; modified?: string[] }>;
 }
