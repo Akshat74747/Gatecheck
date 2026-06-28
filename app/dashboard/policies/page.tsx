@@ -3,15 +3,9 @@
 import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ShieldCheck,
-  ArrowLeft,
-  RefreshCw,
-  Save,
-  XCircle,
-  AlertTriangle,
-  Info,
-} from 'lucide-react';
+import { XCircle, AlertTriangle, Info, RefreshCw } from 'lucide-react';
+import DashboardLayout from '../../components/DashboardLayout';
+import Button from '../../components/ui/Button';
 
 type PolicyAction = 'block' | 'warn' | 'off';
 
@@ -24,53 +18,23 @@ interface PolicyRow {
   isOverridden: boolean;
 }
 
-const ACTION_CONFIG: Record<PolicyAction, { label: string; color: string; bg: string }> = {
-  block: { label: 'Block', color: 'text-red-400', bg: 'bg-red-500/20 border-red-500/40 ring-red-500/50' },
-  warn:  { label: 'Warn',  color: 'text-yellow-400', bg: 'bg-yellow-500/20 border-yellow-500/40 ring-yellow-500/50' },
-  off:   { label: 'Off',   color: 'text-slate-400', bg: 'bg-slate-700/50 border-slate-600/40 ring-slate-500/50' },
+const SEV_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+  critical: XCircle,
+  high:     AlertTriangle,
+  medium:   AlertTriangle,
+  low:      Info,
+  info:     Info,
 };
 
-const SEVERITY_ICON: Record<string, React.ReactNode> = {
-  critical: <XCircle className="w-4 h-4 text-red-400" />,
-  high:     <AlertTriangle className="w-4 h-4 text-orange-400" />,
-  medium:   <AlertTriangle className="w-4 h-4 text-yellow-400" />,
-  low:      <Info className="w-4 h-4 text-blue-400" />,
-  info:     <Info className="w-4 h-4 text-slate-400" />,
+const SEV_COLOR: Record<string, string> = {
+  critical: 'text-[#f87171]',
+  high:     'text-[#fb923c]',
+  medium:   'text-[#fcd34d]',
+  low:      'text-[#818cf8]',
+  info:     'text-[#94a3b8]',
 };
 
-function ActionToggle({
-  current,
-  onChange,
-  saving,
-}: {
-  current: PolicyAction;
-  onChange: (a: PolicyAction) => void;
-  saving: boolean;
-}) {
-  const actions: PolicyAction[] = ['block', 'warn', 'off'];
-  return (
-    <div className="flex rounded-xl overflow-hidden border border-white/10">
-      {actions.map(a => {
-        const cfg = ACTION_CONFIG[a];
-        const active = current === a;
-        return (
-          <button
-            key={a}
-            onClick={() => onChange(a)}
-            disabled={saving}
-            className={`px-4 py-1.5 text-xs font-semibold transition-all ${
-              active
-                ? `${cfg.bg} ${cfg.color} border ring-1`
-                : 'text-slate-500 hover:text-slate-300 bg-transparent'
-            } disabled:opacity-50`}
-          >
-            {cfg.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+const SEV_ORDER = ['critical', 'high', 'medium', 'low', 'info'];
 
 function PoliciesPage() {
   const searchParams = useSearchParams();
@@ -90,7 +54,14 @@ function PoliciesPage() {
     try {
       const res = await fetch(`/api/policies/${repoId}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setPolicies(await res.json());
+      const data: PolicyRow[] = await res.json();
+      // Sort by severity order
+      data.sort((a, b) => {
+        const ai = SEV_ORDER.indexOf(a.defaultSeverity);
+        const bi = SEV_ORDER.indexOf(b.defaultSeverity);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+      setPolicies(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load policies');
     } finally {
@@ -101,7 +72,6 @@ function PoliciesPage() {
   useEffect(() => { loadPolicies(); }, [loadPolicies]);
 
   async function updateAction(ruleId: string, action: PolicyAction) {
-    // Optimistic update
     setPolicies(prev => prev.map(p =>
       p.ruleId === ruleId ? { ...p, action, isOverridden: action !== p.defaultAction } : p
     ));
@@ -115,152 +85,159 @@ function PoliciesPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setSaved(s => ({ ...s, [ruleId]: true }));
       setTimeout(() => setSaved(s => { const n = { ...s }; delete n[ruleId]; return n; }), 1500);
-    } catch (e) {
-      console.error('Save failed', e);
-      // Revert
+    } catch {
       loadPolicies();
     } finally {
       setSaving(s => { const n = { ...s }; delete n[ruleId]; return n; });
     }
   }
 
+  const overridden = policies.filter(p => p.isOverridden).length;
+
   if (!repoId) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-slate-400 mb-4">No repository selected.</p>
-          <Link href="/" className="text-emerald-400 hover:underline">← Back to repos</Link>
+      <DashboardLayout>
+        <div className="clay p-12 text-center">
+          <p className="text-muted-foreground mb-4">No repository selected.</p>
+          <Link href="/"><Button variant="ghost">← Back to repos</Button></Link>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
-  const overridden = policies.filter(p => p.isOverridden).length;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <DashboardLayout repoId={repoId} repoName={repoName}>
       {/* Header */}
-      <header className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-10 bg-slate-900/60">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/dashboard?repoId=${repoId}&repoName=${encodeURIComponent(repoName)}`}
-              className="text-slate-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <ShieldCheck className="w-6 h-6 text-emerald-400" />
-            <div>
-              <span className="font-semibold text-sm">{repoName}</span>
-              <span className="ml-2 text-slate-500 text-sm">/ Policies</span>
-            </div>
-          </div>
-          <button
-            onClick={loadPolicies}
-            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-            Security Policy Rules
-          </h1>
-          <p className="text-slate-400">
-            Configure how each rule behaves. <strong className="text-white">Block</strong> halts CI,{' '}
-            <strong className="text-white">Warn</strong> logs but continues, <strong className="text-white">Off</strong> ignores the rule.
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-extrabold gradient-text-primary">Security Policies</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">{repoName}</p>
             {overridden > 0 && (
-              <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full">
+              <span className="clay-pill text-[9px] font-bold px-2 py-0.5 text-accent">
                 {overridden} override{overridden !== 1 ? 's' : ''}
               </span>
             )}
-          </p>
+          </div>
         </div>
+        <Button
+          variant="subtle"
+          size="sm"
+          icon={RefreshCw}
+          onClick={loadPolicies}
+          className={loading ? '[&_svg]:animate-spin' : ''}
+        >
+          Refresh
+        </Button>
+      </div>
 
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm mb-6">
-            {error}
-          </div>
-        )}
+      {/* Legend */}
+      <div className="clay-sm px-5 py-3 mb-6 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+        <span><strong className="text-destructive">Block</strong> — halts CI pipeline</span>
+        <span><strong className="text-accent">Warn</strong> — logs finding, CI continues</span>
+        <span><strong className="text-muted-foreground">Off</strong> — rule ignored entirely</span>
+      </div>
 
-        {loading && (
-          <div className="space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white/5 rounded-2xl h-16 animate-pulse" />
-            ))}
-          </div>
-        )}
+      {/* Error */}
+      {error && (
+        <div className="clay-sm p-4 mb-4" style={{ background: 'linear-gradient(145deg,#2a1a1a,#1f1212)', borderColor: 'rgba(248,113,113,0.2)' }}>
+          <p className="text-destructive text-sm">{error}</p>
+        </div>
+      )}
 
-        {!loading && policies.length > 0 && (
-          <div className="space-y-2">
-            {policies.map(policy => (
+      {/* Loading */}
+      {loading && (
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="clay-sm h-14 animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {/* Policy rows */}
+      {!loading && policies.length > 0 && (
+        <div className="space-y-2">
+          {policies.map(policy => {
+            const Icon = SEV_ICON[policy.defaultSeverity] ?? Info;
+            const iconColor = SEV_COLOR[policy.defaultSeverity] ?? 'text-muted-foreground';
+            const actions: PolicyAction[] = ['block', 'warn', 'off'];
+
+            return (
               <div
                 key={policy.ruleId}
-                className={`flex items-center justify-between px-5 py-4 rounded-2xl border transition-all ${
-                  policy.isOverridden
-                    ? 'bg-yellow-500/5 border-yellow-500/20'
-                    : 'bg-white/5 border-white/10'
+                className={`clay-sm px-5 py-3 flex items-center justify-between gap-4 transition-all ${
+                  policy.isOverridden ? 'border-l-2' : ''
                 }`}
+                style={policy.isOverridden ? { borderLeftColor: '#fcd34d' } : {}}
               >
+                {/* Left */}
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  {SEVERITY_ICON[policy.defaultSeverity] ?? SEVERITY_ICON.info}
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${iconColor}`} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-slate-300">{policy.ruleId}</span>
-                      {policy.isOverridden && (
-                        <span className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-1.5 py-0.5 rounded">
+                      <span className="font-mono text-xs text-foreground/80">{policy.ruleId}</span>
+                      {policy.isOverridden && saved[policy.ruleId] && (
+                        <span className="text-[9px] text-chart-5 font-bold">Saved</span>
+                      )}
+                      {policy.isOverridden && !saved[policy.ruleId] && (
+                        <span
+                          className="clay-pill text-[9px] font-bold px-1.5 py-0.5 text-accent"
+                        >
                           overridden
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5 truncate">{policy.description}</div>
+                    <p className="text-[10px] text-muted-foreground truncate max-w-[36ch]">{policy.description}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 ml-4 flex-shrink-0">
-                  {saved[policy.ruleId] && (
-                    <Save className="w-4 h-4 text-emerald-400 animate-pulse" />
-                  )}
-                  <ActionToggle
-                    current={policy.action}
-                    onChange={a => updateAction(policy.ruleId, a)}
-                    saving={!!saving[policy.ruleId]}
-                  />
+                {/* Right: toggle group */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="clay-pressed flex rounded-2xl overflow-hidden p-0.5 gap-0.5">
+                    {actions.map(a => {
+                      const active = policy.action === a;
+                      const color = a === 'block' ? '#f87171' : a === 'warn' ? '#fcd34d' : '#94a3b8';
+                      return (
+                        <button
+                          key={a}
+                          disabled={!!saving[policy.ruleId]}
+                          onClick={() => updateAction(policy.ruleId, a)}
+                          className={`px-3 py-1 text-xs font-semibold rounded-xl transition-all capitalize disabled:opacity-50 ${
+                            active ? 'clay-sm' : 'hover:bg-white/5'
+                          }`}
+                          style={active ? { color } : { color: '#545454' }}
+                        >
+                          {a}
+                        </button>
+                      );
+                    })}
+                  </div>
                   {policy.isOverridden && (
                     <button
                       onClick={() => updateAction(policy.ruleId, policy.defaultAction)}
-                      className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-                      title="Reset to default"
+                      className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                     >
                       reset
                     </button>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && policies.length === 0 && !error && (
-          <div className="text-center py-20 text-slate-500">
-            <p>No policy rules found.</p>
-          </div>
-        )}
-      </main>
-    </div>
+            );
+          })}
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
 
 export default function PoliciesPageWrapper() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 text-slate-500 animate-spin" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-24">
+          <RefreshCw className="w-8 h-8 text-muted-foreground animate-spin" />
+        </div>
+      </DashboardLayout>
     }>
       <PoliciesPage />
     </Suspense>
