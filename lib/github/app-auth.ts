@@ -19,6 +19,9 @@ function generateAppJWT(): string {
 }
 
 export async function getInstallationToken(installationId: number): Promise<string> {
+  const appId = process.env.GITHUB_APP_ID;
+  console.log(`[auth] App ID from env: "${appId}", requesting token for installation ${installationId}`);
+
   const appJwt = generateAppJWT();
   const res = await fetch(
     `${GITHUB_API}/app/installations/${installationId}/access_tokens`,
@@ -33,6 +36,7 @@ export async function getInstallationToken(installationId: number): Promise<stri
   );
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    console.error(`[auth] GitHub response ${res.status}:`, JSON.stringify(body));
     throw new Error(`Failed to get installation token: ${(body as { message?: string }).message ?? res.status}`);
   }
   const data = (await res.json()) as { token: string };
