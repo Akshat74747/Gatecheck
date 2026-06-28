@@ -3,10 +3,12 @@ import jwt from 'jsonwebtoken';
 const GITHUB_API = 'https://api.github.com';
 
 function generateAppJWT(): string {
-  const appId    = process.env.GITHUB_APP_ID!;
-  const rawKey   = process.env.GITHUB_APP_PRIVATE_KEY!;
-  // Support both literal newlines and escaped \n from env var
-  const privateKey = rawKey.replace(/\\n/g, '\n');
+  const appId  = process.env.GITHUB_APP_ID!;
+  const rawKey = process.env.GITHUB_APP_PRIVATE_KEY!;
+  // Support base64-encoded PEM (preferred for Vercel), escaped \n, or real newlines
+  const privateKey = rawKey.trimStart().startsWith('-----')
+    ? rawKey.replace(/\\n/g, '\n')
+    : Buffer.from(rawKey, 'base64').toString('utf8');
 
   const now = Math.floor(Date.now() / 1000);
   return jwt.sign(
