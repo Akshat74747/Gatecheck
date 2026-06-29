@@ -27,6 +27,19 @@ export async function createReview(params: {
   repoId: string;
   commitSha: string;
 }): Promise<PrReview> {
+  // Delete any incomplete reviews (and their agent_reports) for this PR before starting fresh,
+  // so retried jobs don't leave stale partial data that inflates analytics.
+  await pool.query(
+    `DELETE FROM agent_reports WHERE review_id IN (
+       SELECT id FROM pr_reviews WHERE pr_id=$1 AND status != 'complete'
+     )`,
+    [params.prId]
+  );
+  await pool.query(
+    `DELETE FROM pr_reviews WHERE pr_id=$1 AND status != 'complete'`,
+    [params.prId]
+  );
+
   const r = await pool.query<PrReview>(
     `INSERT INTO pr_reviews (pr_id, repo_id, commit_sha) VALUES ($1,$2,$3) RETURNING *`,
     [params.prId, params.repoId, params.commitSha]

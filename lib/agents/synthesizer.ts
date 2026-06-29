@@ -22,7 +22,16 @@ export async function runSynthesizer(
   const criticalOrHigh = allFindings.filter(f => f.severity === 'critical' || f.severity === 'high');
   const forcedVerdict = criticalOrHigh.length > 0 ? 'request_changes' : null;
 
-  const findingsSummary = allFindings.map(f =>
+  // Cap findings sent to synthesizer: top 10 critical/high, top 10 medium, top 5 low
+  const severityOrder = ['critical', 'high', 'medium', 'low', 'info'];
+  const cappedFindings = [
+    ...allFindings.filter(f => f.severity === 'critical' || f.severity === 'high').slice(0, 10),
+    ...allFindings.filter(f => f.severity === 'medium').slice(0, 10),
+    ...allFindings.filter(f => f.severity === 'low' || f.severity === 'info').slice(0, 5),
+  ];
+  void severityOrder;
+
+  const findingsSummary = cappedFindings.map(f =>
     `[${f.agent.toUpperCase()}] ${f.severity.toUpperCase()}: ${f.message}${f.file ? ` (${f.file}${f.line ? `:${f.line}` : ''})` : ''}`
   ).join('\n');
 
@@ -35,7 +44,7 @@ export async function runSynthesizer(
 Agent summaries:
 ${agentSummaries}
 
-All findings (${allFindings.length} total):
+Top findings (${cappedFindings.length} shown of ${allFindings.length} total):
 ${findingsSummary || 'No findings from any agent.'}
 
 ${forcedVerdict ? `IMPORTANT: There are ${criticalOrHigh.length} critical/high severity findings — verdict MUST be "request_changes".` : ''}

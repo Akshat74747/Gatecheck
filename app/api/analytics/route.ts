@@ -25,11 +25,11 @@ export async function GET(req: NextRequest) {
        GROUP BY severity`,
       baseVals
     ),
-    // Findings by agent type
+    // Findings by agent type — only count from completed reviews to avoid double-counting retries
     pool.query(
       `SELECT agent_type, SUM(finding_count) as count FROM agent_reports ar
        JOIN pr_reviews rv ON ar.review_id = rv.id
-       WHERE ar.created_at > $1 AND ar.status='complete' ${repoFilter ? `AND rv.repo_id=$2` : ''}
+       WHERE ar.created_at > $1 AND ar.status='complete' AND rv.status='complete' ${repoFilter ? `AND rv.repo_id=$2` : ''}
        GROUP BY agent_type`,
       baseVals
     ),
