@@ -59,16 +59,9 @@ export async function POST(req: NextRequest) {
 // ---------------------------------------------------------------------------
 
 async function handlePush(body: GitHubPushPayload) {
-  const repoFullName   = body.repository.full_name;
-  const defaultBranch  = body.repository.default_branch;
-  const ref            = body.ref; // e.g. "refs/heads/main"
-  const headSha        = body.after;
-
-  // Only scan pushes to the default branch
-  if (ref !== `refs/heads/${defaultBranch}`) {
-    console.log(`[webhook] push to non-default branch ${ref} — skipping`);
-    return;
-  }
+  const repoFullName = body.repository.full_name;
+  const ref          = body.ref; // e.g. "refs/heads/main"
+  const headSha      = body.after;
 
   const repo = await getRepoByFullName(repoFullName);
   if (!repo) {
@@ -181,7 +174,7 @@ function pushTouchedCiFiles(body: GitHubPushPayload): boolean {
 interface GitHubPushPayload {
   ref: string;
   after: string;
-  repository: { full_name: string; default_branch: string };
+  repository: { full_name: string; default_branch?: string };
   installation?: { id: number };
   pusher?: { name: string };
   commits?: Array<{ added?: string[]; modified?: string[] }>;
