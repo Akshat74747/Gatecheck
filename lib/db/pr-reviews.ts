@@ -65,9 +65,9 @@ export async function updateReview(id: string, updates: Partial<{
   const sets: string[] = [];
   const vals: unknown[] = [];
   for (const [k, v] of Object.entries(updates)) {
-    vals.push(typeof v === 'object' && !Array.isArray(v) ? JSON.stringify(v) : v);
-    const col = k === 'top_actions' ? `top_actions` : k;
-    sets.push(`${col}=$${vals.length}`);
+    // JSONB columns (top_actions) need JSON.stringify for both objects and arrays
+    vals.push((typeof v === 'object' && v !== null) ? JSON.stringify(v) : v);
+    sets.push(`${k}=$${vals.length}`);
   }
   if (!sets.length) return;
   vals.push(id);
