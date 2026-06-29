@@ -40,8 +40,11 @@ export async function GET(
   // --- AI confidence ---
   const confRes = await pool.query<{ avg_conf: string; cnt: string }>(
     `SELECT AVG(confidence_score) as avg_conf, COUNT(*) as cnt
-     FROM pr_reviews WHERE repo_id=$1 AND status='complete'
-     ORDER BY created_at DESC LIMIT 30`,
+     FROM (
+       SELECT confidence_score FROM pr_reviews
+       WHERE repo_id=$1 AND status='complete'
+       ORDER BY created_at DESC LIMIT 30
+     ) sub`,
     [repoId],
   );
   const prsAnalyzed = parseInt(confRes.rows[0]?.cnt ?? '0', 10);
