@@ -13,7 +13,7 @@ const STEPS = [
     title: 'Install the GitHub App',
     description:
       'Install the Gatecheck GitHub App on your repositories. The app automatically configures webhooks so Gatecheck receives push and pull request events.',
-    href: 'https://github.com/apps',
+    href: 'https://github.com/apps/gate-check',
     linkLabel: 'Open GitHub Apps',
   },
   {
