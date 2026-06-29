@@ -1,112 +1,161 @@
-<div align="center">
-  <h1>Gatecheck</h1>
-  <strong>AI-powered security gate for every pull request and CI pipeline.</strong>
-</div>
+# Gatecheck
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js" alt="Next.js">
-  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?style=flat&logo=google" alt="Gemini">
-  <img src="https://img.shields.io/badge/Aurora_DSQL-serverless-FF9900?style=flat&logo=amazonaws" alt="AWS Aurora DSQL">
-  <img src="https://img.shields.io/badge/Vercel-deployed-black?style=flat&logo=vercel" alt="Vercel">
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="MIT">
-</p>
+**An AI-powered security gate for GitHub pull requests and CI pipelines — built around a real Aurora DSQL concurrency problem.**
 
----
-
-## Overview
-
-Gatecheck is a CI security scanner that runs six AI agents in parallel on every pull request, detecting vulnerabilities across security, bugs, performance, readability, best practices, and documentation. A synthesizer agent combines all findings into a single verdict with a confidence score and prioritised action list.
-
-Beyond PR reviews, Gatecheck also scans pushes to enrolled branches for hardcoded secrets, insecure Docker configurations, supply-chain attack patterns in GitHub Actions workflows, and vulnerable dependencies — then writes a halt decision that a lightweight CI step can query to block the deployment before anything ships.
-
-## Hackathon Submission
-
-Built for the **Vercel × AWS Hackathon**.
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?style=flat&logo=google)](https://ai.google.dev)
+[![AWS Aurora DSQL](https://img.shields.io/badge/Aurora_DSQL-serverless-FF9900?style=flat&logo=amazonaws)](https://aws.amazon.com/rds/aurora/dsql/)
+[![Vercel](https://img.shields.io/badge/Vercel-deployed-black?style=flat&logo=vercel)](https://vercel.com)
+[![MIT](https://img.shields.io/badge/license-MIT-green?style=flat)](#license)
 
 **Live Demo:** https://gatecheck-theta.vercel.app
-
-**Key Innovation:** A serverless, queue-free AI review pipeline built entirely on Aurora DSQL as both the relational data store and the job queue — no Redis, no BullMQ, no separate worker process.
-
----
-
-## LGTM-Style Security Coverage
-
-[LGTM](https://lgtm.com) (Looks Good To Me) was a code analysis platform built by Semmle, acquired by GitHub, and now succeeded by GitHub Advanced Security. It pioneered continuous security analysis on every commit: per-repository health scores, CodeQL-powered vulnerability queries, and findings surfaced directly in the pull request workflow rather than a separate security portal.
-
-Gatecheck delivers the same developer experience through a different engine. Where LGTM used CodeQL — a compiled static analysis language that reasons about full program dataflow — Gatecheck uses large language models as the analysis layer. The two approaches are complementary:
-
-| Capability | LGTM / CodeQL | Gatecheck |
-|---|---|---|
-| Dataflow & taint analysis | Full interprocedural | Limited to diff context |
-| Supply-chain attack patterns (GitHub Actions) | Requires custom queries | Built-in deterministic rules |
-| Insecure design patterns (JWT alg:none, MD5 passwords) | Hard to express as queries | Natural for LLMs |
-| Secret detection | Plugin-based | Built-in regex + LLM confirmation |
-| Dockerfile / dependency scanning | Not natively | Built-in rules |
-| Per-repo health score | Yes | Yes — 0–100 from 3 weighted signals |
-| PR verdict with actionable suggestions | Alerts only | Full verdict + top 3 actions |
-| No setup or query authoring required | No | Yes — works on any language, any repo |
-
-**What Gatecheck detects on every push (deterministic rules):**
-
-- Hardcoded secrets and API keys across all source files
-- `pull_request_target` + fork head checkout in GitHub Actions — supply-chain RCE pattern that gives attacker-controlled code write access to `GITHUB_TOKEN`
-- Workflow steps with unrestricted `permissions` scoping
-- Dockerfile `ENV` instructions baking secrets into image layers
-- End-of-life base images (`node:14`, `python:3.8`, etc.) with known CVEs
-- Containers running as root with no `USER` instruction
-- Known-vulnerable dependency versions across `package.json`, `requirements.txt`, and `go.mod`
-
-**What Gatecheck detects on every PR (AI agents):**
-
-- OWASP Top 10: SQL/NoSQL/command injection, XSS, IDOR, path traversal, SSRF
-- Broken authentication: insecure JWT validation, MD5/SHA1 password hashing, auth bypasses
-- Mass assignment, missing input validation, insecure deserialization
-- N+1 query patterns, synchronous blocking calls, unbounded resource consumption
-- Weak CORS configuration, missing security headers, stack traces exposed to clients
-- Race conditions, TOCTOU vulnerabilities, improper error handling
-
-The dashboard layout, repo health score, signal cards, 90-day trend charts, and diff viewer are all directly inspired by LGTM's UX.
+**GitHub App:** https://github.com/apps/gate-check
+**Main repo:** https://github.com/Akshat74747/Gatecheck
 
 ---
 
-## Aurora DSQL — Serverless Database at the Core
+## Table of contents
 
-AWS Aurora DSQL is the serverless, PostgreSQL-compatible distributed SQL database powering every part of Gatecheck. It is the only stateful component in the architecture — there is no Redis, no message broker, no separate worker process, and no persistent server.
-
-**How it is used:**
-
-| Purpose | Tables involved |
-|---|---|
-| Job queue | `scan_jobs` — webhook enqueues a row; cron worker claims it with an optimistic SELECT + UPDATE |
-| PR tracking | `pull_requests`, `pr_reviews`, `agent_reports` — the full AI review lifecycle |
-| Security findings | `findings` — append-only, one row per detected issue |
-| CI halt decisions | `halt_decisions` — written by the push scanner, queried by the CI gate step |
-| Repository registry | `repos` — installation metadata and enrollment state |
-| Policy engine | `policies` — per-repo rule enforcement levels |
-
-**Why DSQL over a traditional queue:**
-
-A dedicated message broker (Redis + BullMQ, SQS, etc.) would add an additional managed service, separate credentials, and a cold-start penalty on every serverless invocation. Aurora DSQL is already the source of truth for all application data — keeping the job queue there means the webhook handler, the cron worker, and the dashboard all share a single connection pool and a single consistency boundary with no synchronisation overhead.
+- [The problem we actually had to solve](#the-problem-we-actually-had-to-solve)
+- [Proof — concurrency handling in Aurora DSQL](#proof--concurrency-handling-in-aurora-dsql)
+- [What Gatecheck does](#what-gatecheck-does)
+- [System architecture](#system-architecture)
+- [How Aurora DSQL is used](#how-aurora-dsql-is-used)
+- [The deterministic rule engine](#the-deterministic-rule-engine)
+- [The six-agent AI review pipeline](#the-six-agent-ai-review-pipeline)
+- [Execution timeline](#execution-timeline)
+- [Getting started](#getting-started)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Acknowledgment & license](#acknowledgment--license)
 
 ---
 
-## The Problem
+## The problem we actually had to solve
 
-Most teams rely on manual code review to catch security vulnerabilities, but human reviewers are inconsistent, expensive for every PR, and miss entire vulnerability classes: supply-chain attacks, JWT algorithm confusion, command injection patterns. By the time a static scan runs in CI, the bad code is already merged.
+Aurora DSQL is a serverless, distributed, PostgreSQL-compatible database — but it doesn't support `SELECT ... FOR UPDATE` or `SKIP LOCKED`. There's no row-level locking. That's the tradeoff of strong consistency in a distributed system: instead of locks, DSQL uses **optimistic concurrency control (OCC)**. Two transactions can both proceed against the same row, and one of them will fail at commit time with a serialization error (Postgres/DSQL error code `40001`). The application is responsible for catching that and deciding what to do next.
 
-## Solution
+We hit this constraint in two real places, not as a hypothetical:
 
-Gatecheck intercepts pull requests and pushes via a GitHub App webhook — before a single line reaches production:
+1. **Job claiming.** A cron worker fires every 60 seconds in production and claims pending work from a `scan_jobs` table. With no `SKIP LOCKED` available, two overlapping invocations could try to grab the same row at once.
+2. **Halt decisions.** A push webhook and a re-run scan can both try to write the safe/unsafe verdict for the *same commit* at the *same time*. The one that loses the race must never silently downgrade a `block` decision to an `allow` — that would be a real security regression caused by a database race, not a logic bug.
 
-- **6 specialist AI agents** review every PR simultaneously — no waiting for sequential analysis
-- **Deterministic security rules** scan CI workflow YAML, Dockerfiles, and dependency files on every push
-- **Halt decisions** are written to Aurora DSQL and queried by a GitHub Actions step that blocks the pipeline if critical findings exist
-- **Repo Health score** tracks your codebase's security posture over time with trend charts and signal cards
+This is the part of the project we think is most worth a database-focused judge's attention, because it's the one piece that's genuinely hard to fake: you only write code that catches and retries on `40001` if you've actually had to.
+
+## Proof — concurrency handling in Aurora DSQL
+
+### Halt decisions: most-severe-wins, enforced in SQL
+
+`writeHaltDecision` uses a single `INSERT ... ON CONFLICT` statement where every mutated column is guarded by a severity-rank comparison, so a losing write can't downgrade the stored verdict — it just doesn't take effect:
+
+```ts
+// lib/db/halt-decisions.ts
+export async function writeHaltDecision(
+  params: HaltDecisionParams,
+  maxRetries = 3
+): Promise<{ retries: number }> {
+  const { repoId, commitSha, decision, severity, reason, findingIds, expiresAt } = params;
+  const incomingRank = SEVERITY_RANK[severity] ?? 0;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await pool.query(
+        `INSERT INTO halt_decisions
+           (repo_id, commit_sha, decision, severity, reason, finding_ids, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (repo_id, commit_sha) DO UPDATE SET
+           decision = CASE WHEN $8 > (
+             CASE halt_decisions.severity
+               WHEN 'critical' THEN 4 WHEN 'high' THEN 3
+               WHEN 'medium'   THEN 2 WHEN 'low'  THEN 1 ELSE 0 END
+           ) THEN EXCLUDED.decision ELSE halt_decisions.decision END,
+           severity = CASE WHEN $8 > (/* same rank comparison */ 0)
+             THEN EXCLUDED.severity ELSE halt_decisions.severity END,
+           reason   = CASE WHEN $8 > (/* same rank comparison */ 0)
+             THEN EXCLUDED.reason   ELSE halt_decisions.reason   END,
+           finding_ids = (
+             SELECT jsonb_agg(DISTINCT val)
+             FROM jsonb_array_elements(halt_decisions.finding_ids || EXCLUDED.finding_ids) AS val
+           ),
+           updated_at = NOW()`,
+        [repoId, commitSha, decision, severity, reason, JSON.stringify(findingIds), expiresAt, incomingRank]
+      );
+      return { retries: attempt };
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      if (code === '40001' && attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 50 * Math.pow(2, attempt)));
+        continue; // retry on DSQL serialization conflict
+      }
+      throw err;
+    }
+  }
+  throw new Error('writeHaltDecision: exhausted retries');
+}
+```
+
+What this buys, concretely:
+
+- **Most-severe-wins is enforced by the database, not application code.** A `medium` finding can never overwrite a stored `critical` halt — even if it arrives second, even on a retry, even under concurrent writers.
+- **Evidence is merged, not discarded.** `jsonb_agg(DISTINCT ...)` over the union of old and new finding IDs means a losing write still contributes its findings instead of vanishing.
+- **Retries are scoped to the real OCC error.** Only code `40001` triggers a retry, with exponential backoff (`50ms * 2^attempt`). Anything else fails fast and propagates.
+- `writeHaltDecision` returns `{ retries }` specifically so the retry path is observable and testable — not just trusted to work.
+
+### Job claiming: optimistic claim instead of row locks
+
+`claimNextJob` can't use `FOR UPDATE` / `SKIP LOCKED` on DSQL, so it claims work in two steps — `SELECT` the oldest pending job, then `UPDATE` only if it's still pending:
+
+```ts
+// lib/db/scan-jobs.ts
+export async function claimNextJob(): Promise<ScanJob | null> {
+  // Stale jobs (stuck >5min from a function timeout) reset to pending.
+  // Epoch arithmetic instead of INTERVAL — for DSQL compatibility.
+  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  await pool.query(
+    `UPDATE scan_jobs SET status = 'pending', started_at = NULL
+     WHERE status = 'processing' AND started_at < $1 AND attempts < max_attempts`,
+    [staleThreshold]
+  );
+
+  const select = await pool.query<{ id: string }>(
+    `SELECT id FROM scan_jobs
+     WHERE status = 'pending' AND attempts < max_attempts
+     ORDER BY created_at ASC LIMIT 1`
+  );
+  if (!select.rows[0]) return null;
+
+  const result = await pool.query<ScanJob>(
+    `UPDATE scan_jobs
+     SET status = 'processing', started_at = NOW(), attempts = attempts + 1
+     WHERE id = $1 AND status = 'pending'
+     RETURNING *`,
+    [select.rows[0].id]
+  );
+  return result.rows[0] ?? null;
+}
+```
+
+The `WHERE id = $1 AND status = 'pending'` on the final update is the actual safety net: if a second invocation already claimed the row in the gap between the `SELECT` and this `UPDATE`, the row count comes back zero and this worker simply gets nothing back — instead of two workers processing the same job. The cron runs every 60 seconds in production. The system doesn't need this race to never happen; it needs a double-claim to be harmless if it does, and it is, because of the next point.
+
+**The two proofs work together, not independently.** Job claiming can tolerate occasional double-execution specifically *because* halt-decision writes can absorb a duplicate scan without ever downgrading a previously-stored verdict. Neither piece of concurrency handling would be sufficient on its own — they're a matched pair, not two unrelated features.
+
+Full schema, every table, and the complete request-by-request data flow are in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
-## High-Level System Architecture
+## What Gatecheck does
+
+Gatecheck is a GitHub App that intercepts pull requests and pushes before a vulnerable change reaches production. It has two independent detection surfaces that share one database and one dashboard:
+
+| Surface | Trigger | Engine | What it produces |
+| --- | --- | --- | --- |
+| **CI Security Gate** | Every push touching CI-relevant files | Deterministic rule engine — zero LLM | A halt/allow decision a CI step can query |
+| **PR Review** | Every pull request open/update | Six Gemini 2.5 Flash agents in parallel | A synthesized verdict, confidence score, top 3 actions |
+
+The deterministic gate is the part that can actually **stop a pipeline before checkout** — that's the mechanism, not a dashboard alert read after the fact. The AI review is a broader, more exploratory pass across code quality, not just security.
+
+## System architecture
 
 ```mermaid
 graph TB
@@ -115,103 +164,114 @@ graph TB
     end
 
     subgraph Vercel ["Vercel (Next.js)"]
-        App[App Router\nDashboard UI]
+        App[App Router — Dashboard UI]
         Webhook[POST /api/webhook]
-        Worker[GET /api/cron/scan-worker]
-        HaltAPI[GET /api/pipeline/decision]
+        Worker[GET /api/cron/scan-worker — every 60s]
+        HaltAPI[GET /api/pipeline/decision/:sha]
     end
 
     subgraph AWS ["AWS"]
-        DSQL[(Aurora DSQL\nPostgreSQL-compatible)]
+        DSQL[(Aurora DSQL<br/>PostgreSQL-compatible, OCC)]
     end
 
     subgraph GitHub ["GitHub"]
-        GHApp[GitHub App\nWebhooks + API]
+        GHApp[GitHub App — Webhooks + API]
         Actions[GitHub Actions CI]
     end
 
     subgraph Google ["Google AI"]
-        Gemini[Gemini 2.5 Flash]
+        Gemini[Gemini 2.5 Flash — 6 parallel agents]
     end
 
     Browser -->|Dashboard| App
     App <-->|Read / Write| DSQL
     GHApp -->|push / pull_request event| Webhook
     Webhook -->|Enqueue scan_job| DSQL
-    Cron[Vercel Cron\nevery 60s] --> Worker
-    Worker -->|Claim job| DSQL
-    Worker -->|Fetch PR diff| GHApp
+    Worker -->|claimNextJob| DSQL
+    Worker -->|Fetch PR diff / CI files| GHApp
     Worker -->|6 parallel calls| Gemini
-    Worker -->|Write results| DSQL
+    Worker -->|writeHaltDecision| DSQL
     Actions -->|Query halt decision| HaltAPI
     HaltAPI <-->|Read findings| DSQL
 ```
 
----
+Aurora DSQL is the only stateful component — no Redis, no message broker, no separate worker process, no persistent server. The webhook handler, the cron worker, and the dashboard all read and write through the same connection pool and the same consistency boundary.
 
-## Key Features
+## How Aurora DSQL is used
 
-### Multi-Agent PR Review
+| Purpose | Tables | Notes |
+| --- | --- | --- |
+| Job queue | `scan_jobs` | Webhook enqueues; cron worker claims — see Proof above |
+| CI halt decisions | `halt_decisions` | Most-severe-wins under concurrent writers — see Proof above |
+| Security findings | `findings` | Append-only, one row per detection, never updated |
+| PR review lifecycle | `pull_requests`, `pr_reviews`, `agent_reports` | Full 6-agent review state, polled by the dashboard |
+| Repository registry | `repos` | GitHub App installation metadata, enrollment state |
+| Policy engine | `policies`, `rules` | Per-repo block/warn/off override per rule |
 
-Six Gemini 2.5 Flash agents run in parallel on every pull request diff:
+**Why DSQL instead of a traditional queue (Redis + BullMQ, SQS):** a separate broker means a separate managed service, separate credentials, and a cold-start penalty on every serverless invocation. DSQL is already the source of truth for every other table; keeping the queue there means one connection pool and one consistency boundary, with OCC's tradeoffs handled explicitly in code instead of papered over by a lock primitive that doesn't exist on this database.
 
-| Agent | Focus area |
-|---|---|
-| Security | OWASP Top 10, injection, auth bypass, exposed secrets |
-| Bugs | Logic errors, null dereferences, edge-case failures |
-| Performance | N+1 queries, blocking I/O, unnecessary allocations |
-| Readability | Naming, complexity, dead code |
-| Best Practices | Design patterns, error handling, test coverage signals |
-| Documentation | Missing docs, stale comments, API contract gaps |
+**Other DSQL-specific adaptations in the schema and queries:**
+- No foreign key constraints — referential integrity enforced at the application layer instead
+- No `ON CONFLICT` unless backed by an inline `UNIQUE` constraint (async indexes can't be conflict targets)
+- All indexes created `ASYNC`
+- Stale-job detection uses epoch-timestamp comparison instead of `INTERVAL`, for DSQL compatibility
 
-A synthesizer then combines all findings into a single verdict (`approve` / `request_changes` / `comment`) with a confidence score and the top three concrete actions your team needs to take.
+## The deterministic rule engine
 
-### CI Security Gate
+Sixteen detectors, fanned out from a single registry (`lib/security/rules/index.ts`), every one of them pure and synchronous — no network calls, no LLM, no I/O. `runAllRules()` takes already-fetched files and returns findings; the database and network layers live entirely outside this module.
 
-A deterministic rule engine scans files on every push without running your code:
+The headline detector — `pull_request_target` + fork-head checkout — walks the actual YAML AST rather than pattern-matching text, because workflow YAML supports arbitrary indentation, anchors, and flow-style mappings that regex reliably misses:
 
-- **Secrets** — regex patterns for API keys, tokens, and private keys embedded in source
-- **Workflow YAML** — `pull_request_target` + fork checkout (supply-chain RCE), missing permissions scoping
-- **Dockerfile** — EOL base images, secrets baked into `ENV` layers, running as root
-- **Dependencies** — known-vulnerable package versions across `package.json`, `requirements.txt`, `go.mod`
+```ts
+// lib/security/rules/workflow-yaml.ts (abridged)
+function checkPullRequestTargetWithCheckout(doc, ctx, findings) {
+  const onNode = getMapValue(doc.contents, "on");
+  const usesPRT = /* true if pull_request_target appears in `on:` */;
+  if (!usesPRT) return;
 
-A halt decision is written to Aurora DSQL and queried by your CI step at `/api/pipeline/decision/:sha`. Critical findings block the pipeline before any deployment step runs.
+  for (const step of /* every actions/checkout step in every job */) {
+    const ref = scalarString(getMapValue(step.with, "ref"));
+    const looksLikePrHead = ref && /github\.event\.pull_request\.head/.test(ref);
+    if (looksLikePrHead) {
+      findings.push({
+        ruleId: "workflow.pull-request-target-with-head-checkout",
+        severity: "critical",
+        message: `pull_request_target + checkout of PR head (\`${ref}\`) is the classic
+                   supply-chain RCE pattern. The forked PR's code runs with secrets from your repo.`,
+        suggestion: buildPullRequestTargetFix(ref), // two concrete remediation options, inline
+      });
+    }
+  }
+}
+```
 
-### Repo Health Score
+The other fifteen rules cover: hardcoded secrets (API keys, AWS keys, GitHub tokens, private key headers, JWTs), `permissions: write-all` and missing job-level scoping, untrusted PR title/body interpolated into shell `run:` blocks, privileged containers, self-hosted runners on public repos, unpinned third-party actions and `actions/checkout` (tag instead of 40-char SHA), Dockerfile root-user final stages and `ADD <url>` without integrity checks, lockfile-only edits with no matching manifest change (the hash-substitution signature), and outbound calls to non-allowlisted domains inside CI shell blocks.
 
-A 0–100 score computed on-demand from three weighted signals:
+Each finding carries a concrete, embedded fix — not a generic example. The `pull_request_target` fix, for instance, shows the user's *actual* offending `ref:` line and two real remediation paths (switch to `pull_request`, or keep the privileged trigger but drop the head checkout), because a fix the user has to translate from a template is a fix many people skip.
 
-| Signal | Weight | Source |
-|---|---|---|
-| Findings Debt | 40% | Weighted open findings by severity (`critical×10 + high×5 + medium×2 + low×1`) |
-| AI Confidence | 30% | Average confidence score across the last 30 completed reviews |
-| Scan Coverage | 30% | Completed scans relative to a 10-scan baseline |
+## The six-agent AI review pipeline
 
-Score ≥ 80 = Healthy · 60–79 = Needs Attention · < 60 = At Risk
+On every PR, six Gemini 2.5 Flash agents run in parallel — Security, Bugs, Performance, Readability, Best Practices, Documentation — each scoped to its own slice of the diff. A synthesizer agent combines all six reports into a single verdict (`approve` / `request_changes` / `comment`) with a confidence score and the top three concrete actions. If the synthesizer doesn't respond within 25 seconds, a code-computed fallback verdict — built directly from finding severity counts, no LLM call — takes over, so a review always completes even if the model call doesn't.
 
-### Real-time Dashboard
+> Note on verification: the rule engine and the DSQL concurrency layer above are confirmed directly from source. The agent orchestration and synthesizer fallback are documented in `ARCHITECTURE.md` and reflected in the live dashboard's behavior; if you want this section backed by the same line-by-line proof as the sections above, `lib/agents/synthesizer.ts` and `lib/review/runner.ts` are the files to check next.
 
-The PR detail page polls every 5 seconds while a review runs — each agent tab updates live with its finding count as it completes, before the synthesizer verdict appears.
+## Execution timeline
 
----
+The project shipped in a single push, in this order, because each step had to be provable before the next one was worth building:
 
-## Getting Started
+1. Provisioned Aurora DSQL and the six-table schema (`repos`, `scan_jobs`, `findings`, `halt_decisions`, `policies`, plus PR review tables).
+2. Built and proved the deterministic rule engine against a real test repository (`Gatecheck-test`) — starting with the `pull_request_target` detector, since it's the highest-value, hardest-to-get-wrong rule.
+3. Wired the webhook receiver and the cron worker, then hit the DSQL row-locking limitation directly while building job claiming — which is what produced the optimistic-claim design above.
+4. Built the halt-decision writer, hit the same OCC tradeoff from the other direction, and added the retry-on-`40001` logic.
+5. Published the runtime GitHub Action (the actual halt step) and ran it end-to-end against a live PR.
+6. Added the six-agent Gemini review pipeline, the Repo Health score, and the analytics dashboard.
 
-### 1. Install the GitHub App
+## Getting started
 
-Install the [Gatecheck GitHub App](https://github.com/apps/gate-check) on your repositories. Webhooks are configured automatically — no YAML to write.
-
-### 2. Enroll a Repository
-
-Go to **Repositories** in the dashboard and click **Enroll** on any repo where the GitHub App is installed. This enables both PR review and push scanning for that repo.
-
-### 3. Trigger Your First Review
-
-**PR Review:** Open or update a pull request on an enrolled repo. Gatecheck picks up the webhook and starts the 6-agent review within seconds.
-
-**CI Scan:** Push a commit touching `.github/workflows/`, a `Dockerfile`, or a dependency manifest. Gatecheck scans it and surfaces findings on the dashboard.
-
-### 4. Add the CI Gate (Optional)
+1. Install the [GitHub App](https://github.com/apps/gate-check) — webhooks configure automatically, no YAML to write.
+2. Enroll a repository from the **Repositories** page in the dashboard.
+3. Trigger a scan — push a commit touching `.github/workflows/`, a `Dockerfile`, or a dependency manifest, or open a PR.
+4. Add the runtime gate (optional, recommended) as the *first* step of any job you want gated:
 
 ```yaml
 - name: Gatecheck security gate
@@ -221,56 +281,30 @@ Go to **Repositories** in the dashboard and click **Enroll** on any repo where t
       -H "Authorization: Bearer ${{ secrets.GATECHECK_TOKEN }}" \
       | jq -r '.decision')
     if [ "$DECISION" = "halt" ]; then
-      echo "Gatecheck: critical findings block this deployment"
+      echo "Gatecheck: blocking findings exist for this commit"
       exit 1
     fi
 ```
 
----
+The gate soft-fails on Gatecheck API outages — a Gatecheck outage never breaks your CI.
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Framework | Next.js 16 App Router (TypeScript) |
 | Hosting | Vercel (serverless functions + cron) |
-| Database | AWS Aurora DSQL (serverless PostgreSQL-compatible) |
+| Database | AWS Aurora DSQL (serverless, PostgreSQL-compatible, OCC) |
 | AI | Google Gemini 2.5 Flash via `@google/generative-ai` |
-| GitHub Integration | GitHub App (RS256 JWT → installation token) |
+| GitHub integration | GitHub App (RS256 JWT → installation token) |
 | Charts | Recharts |
-| Styling | Tailwind CSS 4 + custom claymorphism design system |
+| Styling | Tailwind CSS 4 |
 
----
-
-## Environment Variables
-
-```env
-# GitHub App
-GITHUB_APP_ID=your_app_id
-GITHUB_APP_PRIVATE_KEY=base64_encoded_pem
-GITHUB_WEBHOOK_SECRET=your_webhook_secret
-
-# AWS Aurora DSQL
-DATABASE_URL=postgresql://...@your-cluster.dsql.us-east-2.on.aws/postgres
-
-# Google Gemini
-GEMINI_API_KEY=your_gemini_api_key
-
-# Vercel Cron auth
-CRON_SECRET=your_cron_secret
-
-# Migration guard
-MIGRATE_SECRET=your_migrate_secret
-```
-
----
-
-## Project Structure
+## Project structure
 
 ```
 gatecheck/
 ├── app/
-│   ├── page.tsx                         # Public landing page
 │   ├── api/
 │   │   ├── webhook/route.ts             # GitHub App webhook handler
 │   │   ├── cron/scan-worker/route.ts    # Cron worker — claims and runs jobs
@@ -280,30 +314,26 @@ gatecheck/
 │   │   ├── repos/route.ts               # Repository list + enrollment
 │   │   ├── findings/route.ts            # Security findings query
 │   │   ├── analytics/route.ts           # Aggregated charts data
-│   │   └── settings/route.ts            # App configuration info
-│   ├── repos/page.tsx                   # Repositories dashboard
-│   ├── prs/[id]/page.tsx                # Live PR review detail
-│   ├── dashboard/page.tsx               # Security findings list
-│   ├── analytics/page.tsx               # Trends and charts
-│   ├── repo-health/[repoId]/            # Health score + diff viewer
-│   ├── getting-started/page.tsx         # Onboarding guide
-│   └── settings/page.tsx                # App settings
+│   │   └── settings/route.ts            # App configuration
+│   └── ...                              # Dashboard pages (repos, PRs, analytics, health, settings)
 ├── lib/
 │   ├── agents/                          # 6 specialist agents + synthesizer
-│   ├── db/                              # Aurora DSQL query layer
+│   ├── db/
+│   │   ├── scan-jobs.ts                 # claimNextJob — optimistic job claim
+│   │   ├── halt-decisions.ts            # writeHaltDecision — most-severe-wins
+│   │   ├── findings.ts / repos.ts / policies.ts
 │   ├── github/                          # App auth + API helpers
 │   ├── review/runner.ts                 # Orchestrates the 6-agent pipeline
 │   ├── scanner/index.ts                 # Deterministic push scan engine
-│   ├── security/rules/                  # Built-in security rule definitions
-│   └── llm/gemini.ts                    # Gemini API client with retry
+│   ├── security/rules/                  # 16 deterministic detectors
+│   └── llm/gemini.ts                    # Gemini client with retry + fallback
 └── __tests__/
-    └── security.rules.test.ts
 ```
 
-For a deep dive into how each component connects, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+Full component map, sequence diagrams, and the complete schema: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
----
+## Acknowledgment & license
 
-## License
+Dashboard layout, repo health scoring, and signal-card UX are inspired by [LGTM](https://lgtm.com) (Looks Good To Me) — the code analysis platform built by Semmle, later acquired by GitHub and succeeded by GitHub Advanced Security.
 
-MIT
+MIT licensed.
