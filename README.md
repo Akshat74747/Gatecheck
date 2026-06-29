@@ -131,7 +131,7 @@ graph TB
     end
 
     subgraph Google ["Google AI"]
-        [ 2.5 Flash]
+        Gemini[Gemini 2.5 Flash]
     end
 
     Browser -->|Dashboard| App
@@ -141,7 +141,7 @@ graph TB
     Cron[Vercel Cron\nevery 60s] --> Worker
     Worker -->|Claim job| DSQL
     Worker -->|Fetch PR diff| GHApp
-    Worker -->|6 parallel calls| 
+    Worker -->|6 parallel calls| Gemini
     Worker -->|Write results| DSQL
     Actions -->|Query halt decision| HaltAPI
     HaltAPI <-->|Read findings| DSQL
@@ -153,7 +153,7 @@ graph TB
 
 ### Multi-Agent PR Review
 
-Six agents run in parallel on every pull request diff:
+Six Gemini 2.5 Flash agents run in parallel on every pull request diff:
 
 | Agent | Focus area |
 |---|---|
