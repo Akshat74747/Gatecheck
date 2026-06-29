@@ -12,36 +12,36 @@ html {
 
 /* ── Theme Variables ── */
 :root {
-  --card: #1a212b;
+  --card: #ffffff;
   --ring: #818cf8;
-  --input: #ffffff;
-  --muted: #333333;
-  --accent: #fcd34d;
-  --border: #545454;
+  --input: #f1f5f9;
+  --muted: #e2e8f0;
+  --accent: #6366f1;
+  --border: #e2e8f0;
   --radius: 1rem;
   --chart-1: #818cf8;
   --chart-2: #2dd4bf;
-  --chart-3: #fcd34d;
+  --chart-3: #f59e0b;
   --chart-4: #f472b6;
-  --chart-5: #4ade80;
-  --popover: #1a212b;
-  --primary: #818cf8;
-  --sidebar: #000000;
+  --chart-5: #22c55e;
+  --popover: #ffffff;
+  --primary: #6366f1;
+  --sidebar: #f8fafc;
   --spacing: 0.25rem;
   --font-mono: "Space Mono", monospace;
   --font-sans: "DM Sans", sans-serif;
-  --secondary: #2dd4bf;
-  --background: #000000;
+  --secondary: #0d9488;
+  --background: #f0f4ff;
   --font-serif: "DM Sans", sans-serif;
-  --foreground: #ffffff;
-  --destructive: #f87171;
-  --card-foreground: #ffffff;
-  --muted-foreground: #cccccc;
-  --accent-foreground: #000000;
-  --popover-foreground: #ffffff;
-  --primary-foreground: #000000;
-  --secondary-foreground: #000000;
-  --destructive-foreground: #000000;
+  --foreground: #0f172a;
+  --destructive: #ef4444;
+  --card-foreground: #0f172a;
+  --muted-foreground: #64748b;
+  --accent-foreground: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #ffffff;
+  --destructive-foreground: #ffffff;
 }
 
 @theme inline {
@@ -91,51 +91,51 @@ body {
 }
 
 /* ══════════════════════════════════════════════
-   CLAYMORPHISM SYSTEM
+   CLAYMORPHISM SYSTEM — Light Mode
    ══════════════════════════════════════════════ */
 
 .clay {
-  background: linear-gradient(145deg, #1e2736, #171d28);
+  background: linear-gradient(145deg, #ffffff, #eef1fb);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.6),
-    -4px -4px 16px rgba(255, 255, 255, 0.015),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.06),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.4);
+    8px 8px 20px rgba(0, 0, 0, 0.08),
+    -4px -4px 16px rgba(255, 255, 255, 0.95),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.85),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .clay-sm {
-  background: linear-gradient(145deg, #1e2736, #171d28);
+  background: linear-gradient(145deg, #ffffff, #eef1fb);
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow:
-    5px 5px 14px rgba(0, 0, 0, 0.5),
-    -3px -3px 10px rgba(255, 255, 255, 0.01),
-    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.05),
-    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.35);
+    5px 5px 14px rgba(0, 0, 0, 0.07),
+    -3px -3px 10px rgba(255, 255, 255, 0.9),
+    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.8),
+    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.03);
 }
 
 .clay-lg {
-  background: linear-gradient(145deg, #1f2838, #161c26);
+  background: linear-gradient(145deg, #ffffff, #eaeffd);
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow:
-    12px 12px 30px rgba(0, 0, 0, 0.7),
-    -6px -6px 20px rgba(255, 255, 255, 0.02),
-    inset 3px 3px 6px rgba(255, 255, 255, 0.07),
-    inset -3px -3px 6px rgba(0, 0, 0, 0.45);
+    12px 12px 30px rgba(0, 0, 0, 0.09),
+    -6px -6px 20px rgba(255, 255, 255, 0.95),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.85),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.04);
 }
 
 .clay-xl {
-  background: linear-gradient(145deg, #202a3a, #151b25);
+  background: linear-gradient(145deg, #ffffff, #e8edfc);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow:
-    16px 16px 40px rgba(0, 0, 0, 0.7),
-    -8px -8px 24px rgba(255, 255, 255, 0.02),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.08),
-    inset -4px -4px 8px rgba(0, 0, 0, 0.5);
+    16px 16px 40px rgba(0, 0, 0, 0.1),
+    -8px -8px 24px rgba(255, 255, 255, 0.95),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.85),
+    inset -4px -4px 8px rgba(0, 0, 0, 0.04);
 }
 
 @media (min-width: 640px) {
@@ -143,56 +143,56 @@ body {
 }
 
 .clay-pressed {
-  background: linear-gradient(145deg, #141a23, #1a212b);
+  background: linear-gradient(145deg, #e8ecf8, #f0f4ff);
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow:
-    inset 4px 4px 10px rgba(0, 0, 0, 0.6),
-    inset -2px -2px 6px rgba(255, 255, 255, 0.02);
+    inset 4px 4px 10px rgba(0, 0, 0, 0.07),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.8);
 }
 
 .clay-primary {
-  background: linear-gradient(145deg, #6366f1, #4f46e5);
+  background: linear-gradient(145deg, #818cf8, #6366f1);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.5),
-    -4px -4px 12px rgba(129, 140, 248, 0.08),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+    8px 8px 20px rgba(99, 102, 241, 0.3),
+    -4px -4px 12px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .clay-secondary {
-  background: linear-gradient(145deg, #2dd4bf, #14b8a6);
+  background: linear-gradient(145deg, #2dd4bf, #0d9488);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.5),
-    -4px -4px 12px rgba(45, 212, 191, 0.08),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+    8px 8px 20px rgba(13, 148, 136, 0.3),
+    -4px -4px 12px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .clay-accent {
-  background: linear-gradient(145deg, #fcd34d, #f59e0b);
+  background: linear-gradient(145deg, #fbbf24, #f59e0b);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.5),
-    -4px -4px 12px rgba(252, 211, 77, 0.08),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.25),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.2);
+    8px 8px 20px rgba(245, 158, 11, 0.3),
+    -4px -4px 12px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .clay-destructive {
   background: linear-gradient(145deg, #f87171, #ef4444);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.5),
-    -4px -4px 12px rgba(248, 113, 113, 0.08),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+    8px 8px 20px rgba(239, 68, 68, 0.3),
+    -4px -4px 12px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.25),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Clay Buttons ── */
@@ -205,66 +205,66 @@ body {
 
 .clay-btn-primary {
   background: linear-gradient(145deg, #818cf8, #6366f1);
-  color: #000;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    6px 6px 16px rgba(0, 0, 0, 0.5),
-    -3px -3px 10px rgba(129, 140, 248, 0.1),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-    inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+    6px 6px 16px rgba(99, 102, 241, 0.35),
+    -3px -3px 10px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.25),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.1);
 }
 .clay-btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.5),
-    -4px -4px 14px rgba(129, 140, 248, 0.15),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.25),
-    inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+    8px 8px 20px rgba(99, 102, 241, 0.4),
+    -4px -4px 14px rgba(255, 255, 255, 0.6),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.1);
 }
 .clay-btn-primary:active {
   transform: translateY(1px);
   box-shadow:
-    2px 2px 8px rgba(0, 0, 0, 0.5),
-    inset 2px 2px 6px rgba(0, 0, 0, 0.3),
-    inset -1px -1px 3px rgba(255, 255, 255, 0.1);
+    2px 2px 8px rgba(99, 102, 241, 0.3),
+    inset 2px 2px 6px rgba(0, 0, 0, 0.15),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.2);
 }
 
 .clay-btn-ghost {
-  background: linear-gradient(145deg, #1e2736, #171d28);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(145deg, #ffffff, #eef1fb);
+  color: #0f172a;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow:
-    5px 5px 14px rgba(0, 0, 0, 0.4),
-    -3px -3px 10px rgba(255, 255, 255, 0.01),
-    inset 1px 1px 3px rgba(255, 255, 255, 0.04),
-    inset -1px -1px 3px rgba(0, 0, 0, 0.3);
+    5px 5px 14px rgba(0, 0, 0, 0.08),
+    -3px -3px 10px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.03);
 }
 .clay-btn-ghost:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
 .clay-btn-accent {
-  background: linear-gradient(145deg, #fcd34d, #f59e0b);
+  background: linear-gradient(145deg, #fbbf24, #f59e0b);
   color: #000;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    6px 6px 16px rgba(0, 0, 0, 0.5),
-    -3px -3px 10px rgba(252, 211, 77, 0.1),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.25),
-    inset -1px -1px 3px rgba(0, 0, 0, 0.15);
+    6px 6px 16px rgba(245, 158, 11, 0.3),
+    -3px -3px 10px rgba(255, 255, 255, 0.5),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.1);
 }
 .clay-btn-accent:hover { transform: translateY(-1px); }
 
 .clay-btn-destructive {
   background: linear-gradient(145deg, #f87171, #ef4444);
-  color: #000;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    6px 6px 16px rgba(0, 0, 0, 0.5),
-    -3px -3px 10px rgba(248, 113, 113, 0.1),
+    6px 6px 16px rgba(239, 68, 68, 0.3),
+    -3px -3px 10px rgba(255, 255, 255, 0.5),
     inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-    inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+    inset -1px -1px 3px rgba(0, 0, 0, 0.1);
 }
 .clay-btn-destructive:hover { transform: translateY(-1px); }
 
@@ -272,32 +272,32 @@ body {
 .clay-icon {
   border-radius: 16px;
   box-shadow:
-    4px 4px 10px rgba(0, 0, 0, 0.4),
-    -2px -2px 6px rgba(255, 255, 255, 0.01),
-    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.08),
-    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.35);
+    4px 4px 10px rgba(0, 0, 0, 0.08),
+    -2px -2px 6px rgba(255, 255, 255, 0.9),
+    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.8),
+    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.04);
 }
 
 .clay-pill {
   border-radius: 50px;
-  background: linear-gradient(145deg, #1e2736, #171d28);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, #ffffff, #eef1fb);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow:
-    4px 4px 10px rgba(0, 0, 0, 0.4),
-    -2px -2px 6px rgba(255, 255, 255, 0.01),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.05),
-    inset -1px -1px 2px rgba(0, 0, 0, 0.3);
+    4px 4px 10px rgba(0, 0, 0, 0.07),
+    -2px -2px 6px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.03);
 }
 
 /* ── Gradient Text ── */
 .gradient-text-primary {
-  background: linear-gradient(135deg, #818cf8, #2dd4bf);
+  background: linear-gradient(135deg, #6366f1, #0d9488);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .gradient-text-accent {
-  background: linear-gradient(135deg, #fcd34d, #818cf8);
+  background: linear-gradient(135deg, #f59e0b, #6366f1);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -306,8 +306,8 @@ body {
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--background); }
-::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* ── Animations ── */
 @keyframes float {
@@ -341,8 +341,8 @@ body {
 
 .hero-grid {
   background-image:
-    linear-gradient(rgba(129, 140, 248, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(129, 140, 248, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 20%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 20%, transparent 70%);

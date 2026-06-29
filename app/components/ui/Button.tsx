@@ -23,7 +23,7 @@ const VARIANTS: Record<Variant, string> = {
   ghost: "clay-btn clay-btn-ghost",
   accent: "clay-btn clay-btn-accent",
   destructive: "clay-btn clay-btn-destructive",
-  subtle: "rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors",
+  subtle: "rounded-lg text-muted-foreground hover:text-foreground hover:bg-black/[0.04] transition-colors",
 };
 
 const Button = forwardRef<HTMLButtonElement, Props>(function Button(
