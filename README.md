@@ -30,6 +30,67 @@ Built for the **Vercel × AWS Hackathon**.
 
 ---
 
+## LGTM-Style Security Coverage
+
+[LGTM](https://lgtm.com) (Looks Good To Me) was a code analysis platform built by Semmle, acquired by GitHub, and now succeeded by GitHub Advanced Security. It pioneered continuous security analysis on every commit: per-repository health scores, CodeQL-powered vulnerability queries, and findings surfaced directly in the pull request workflow rather than a separate security portal.
+
+Gatecheck delivers the same developer experience through a different engine. Where LGTM used CodeQL — a compiled static analysis language that reasons about full program dataflow — Gatecheck uses large language models as the analysis layer. The two approaches are complementary:
+
+| Capability | LGTM / CodeQL | Gatecheck |
+|---|---|---|
+| Dataflow & taint analysis | Full interprocedural | Limited to diff context |
+| Supply-chain attack patterns (GitHub Actions) | Requires custom queries | Built-in deterministic rules |
+| Insecure design patterns (JWT alg:none, MD5 passwords) | Hard to express as queries | Natural for LLMs |
+| Secret detection | Plugin-based | Built-in regex + LLM confirmation |
+| Dockerfile / dependency scanning | Not natively | Built-in rules |
+| Per-repo health score | Yes | Yes — 0–100 from 3 weighted signals |
+| PR verdict with actionable suggestions | Alerts only | Full verdict + top 3 actions |
+| No setup or query authoring required | No | Yes — works on any language, any repo |
+
+**What Gatecheck detects on every push (deterministic rules):**
+
+- Hardcoded secrets and API keys across all source files
+- `pull_request_target` + fork head checkout in GitHub Actions — supply-chain RCE pattern that gives attacker-controlled code write access to `GITHUB_TOKEN`
+- Workflow steps with unrestricted `permissions` scoping
+- Dockerfile `ENV` instructions baking secrets into image layers
+- End-of-life base images (`node:14`, `python:3.8`, etc.) with known CVEs
+- Containers running as root with no `USER` instruction
+- Known-vulnerable dependency versions across `package.json`, `requirements.txt`, and `go.mod`
+
+**What Gatecheck detects on every PR (AI agents):**
+
+- OWASP Top 10: SQL/NoSQL/command injection, XSS, IDOR, path traversal, SSRF
+- Broken authentication: insecure JWT validation, MD5/SHA1 password hashing, auth bypasses
+- Mass assignment, missing input validation, insecure deserialization
+- N+1 query patterns, synchronous blocking calls, unbounded resource consumption
+- Weak CORS configuration, missing security headers, stack traces exposed to clients
+- Race conditions, TOCTOU vulnerabilities, improper error handling
+
+The dashboard layout, repo health score, signal cards, 90-day trend charts, and diff viewer are all directly inspired by LGTM's UX.
+
+---
+
+## Aurora DSQL — Serverless Database at the Core
+
+AWS Aurora DSQL is the serverless, PostgreSQL-compatible distributed SQL database powering every part of Gatecheck. It is the only stateful component in the architecture — there is no Redis, no message broker, no separate worker process, and no persistent server.
+
+**How it is used:**
+
+| Purpose | Tables involved |
+|---|---|
+| Job queue | `scan_jobs` — webhook enqueues a row; cron worker claims it with an optimistic SELECT + UPDATE |
+| PR tracking | `pull_requests`, `pr_reviews`, `agent_reports` — the full AI review lifecycle |
+| Security findings | `findings` — append-only, one row per detected issue |
+| CI halt decisions | `halt_decisions` — written by the push scanner, queried by the CI gate step |
+| Repository registry | `repos` — installation metadata and enrollment state |
+| Policy engine | `policies` — per-repo rule enforcement levels |
+
+**Why DSQL over a traditional queue:**
+
+A dedicated message broker (Redis + BullMQ, SQS, etc.) would add an additional managed service, separate credentials, and a cold-start penalty on every serverless invocation. Aurora DSQL is already the source of truth for all application data — keeping the job queue there means the webhook handler, the cron worker, and the dashboard all share a single connection pool and a single consistency boundary with no synchronisation overhead.
+
+---
+
 ## The Problem
 
 Most teams rely on manual code review to catch security vulnerabilities, but human reviewers are inconsistent, expensive for every PR, and miss entire vulnerability classes: supply-chain attacks, JWT algorithm confusion, command injection patterns. By the time a static scan runs in CI, the bad code is already merged.
