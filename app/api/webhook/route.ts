@@ -4,6 +4,7 @@ import { getRepoByFullName, upsertRepo } from '@/lib/db/repos';
 import { createScanJob } from '@/lib/db/scan-jobs';
 import { isCiRelevantPath } from '@/lib/security/rules/types';
 import { pool } from '@/lib/db/connection';
+import { upsertPullRequest } from '@/lib/db/pull-requests';
 
 // Required for HMAC verification — must read raw bytes, not parsed JSON
 export const runtime = 'nodejs';
@@ -114,8 +115,25 @@ async function handlePullRequest(body: GitHubPRPayload) {
   if (!['opened', 'synchronize', 'reopened'].includes(action)) return;
 
   const repo = await getRepoByFullName(repoFullName);
-  if (!repo || !repo.is_security_enrolled) {
-    console.log(`[webhook] PR on ${repoFullName} — not enrolled or not found`);
+  if (!repo) {
+    console.log(`[webhook] PR on ${repoFullName} — repo not found in DB`);
+    return;
+  }
+
+  // Always upsert the PR record (even if not enrolled in security) so it shows in the PR list
+  await upsertPullRequest({
+    repoId:     repo.id,
+    prNumber:   pr.number,
+    title:      pr.title,
+    author:     pr.user?.login,
+    headSha:    pr.head.sha,
+    headBranch: pr.head.ref,
+    baseBranch: pr.base.ref,
+    htmlUrl:    pr.html_url,
+  });
+
+  if (!repo.is_security_enrolled) {
+    console.log(`[webhook] PR on ${repoFullName} — not enrolled, skipping AI review job`);
     return;
   }
 
@@ -175,6 +193,8 @@ interface GitHubPRPayload {
   pull_request: {
     number: number;
     title: string;
+    html_url: string;
+    user?: { login: string };
     head: { sha: string; ref: string };
     base: { ref: string };
   };

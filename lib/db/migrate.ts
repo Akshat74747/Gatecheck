@@ -98,6 +98,64 @@ const DDL_STATEMENTS = [
   `CREATE INDEX ASYNC IF NOT EXISTS idx_scan_jobs_pending ON scan_jobs(status, created_at)`,
   `CREATE INDEX ASYNC IF NOT EXISTS idx_findings_repo ON findings(repo_id, created_at)`,
   `CREATE INDEX ASYNC IF NOT EXISTS idx_findings_repo_sha ON findings(repo_id, commit_sha)`,
+
+  // 7. pull_requests: PRs tracked across enrolled repos for AI review
+  `CREATE TABLE IF NOT EXISTS pull_requests (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    repo_id     UUID NOT NULL,
+    pr_number   INTEGER NOT NULL,
+    title       TEXT NOT NULL,
+    author      TEXT,
+    head_sha    VARCHAR(64) NOT NULL,
+    head_branch TEXT,
+    base_branch TEXT NOT NULL DEFAULT 'main',
+    html_url    TEXT,
+    status      VARCHAR(32) NOT NULL DEFAULT 'pending',
+    review_id   UUID,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS idx_pull_requests_repo ON pull_requests(repo_id, created_at)`,
+  `CREATE INDEX ASYNC IF NOT EXISTS idx_pull_requests_status ON pull_requests(status)`,
+
+  // 8. pr_reviews: AI review results (one per PR analysis)
+  `CREATE TABLE IF NOT EXISTS pr_reviews (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pr_id            UUID NOT NULL,
+    repo_id          UUID NOT NULL,
+    commit_sha       VARCHAR(64) NOT NULL,
+    verdict          VARCHAR(32),
+    confidence_score INTEGER,
+    summary          TEXT,
+    top_actions      JSONB DEFAULT '[]',
+    changelog_entry  TEXT,
+    critical_count   INTEGER DEFAULT 0,
+    high_count       INTEGER DEFAULT 0,
+    medium_count     INTEGER DEFAULT 0,
+    low_count        INTEGER DEFAULT 0,
+    info_count       INTEGER DEFAULT 0,
+    duration_ms      INTEGER,
+    status           VARCHAR(16) NOT NULL DEFAULT 'running',
+    error            TEXT,
+    created_at       TIMESTAMPTZ DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS idx_pr_reviews_pr ON pr_reviews(pr_id)`,
+  `CREATE INDEX ASYNC IF NOT EXISTS idx_pr_reviews_repo ON pr_reviews(repo_id, created_at)`,
+
+  // 9. agent_reports: per-agent findings within a review
+  `CREATE TABLE IF NOT EXISTS agent_reports (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    review_id     UUID NOT NULL,
+    agent_type    VARCHAR(32) NOT NULL,
+    status        VARCHAR(16) NOT NULL DEFAULT 'pending',
+    summary       TEXT,
+    findings      JSONB DEFAULT '[]',
+    finding_count INTEGER DEFAULT 0,
+    duration_ms   INTEGER,
+    created_at    TIMESTAMPTZ DEFAULT NOW()
+  )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS idx_agent_reports_review ON agent_reports(review_id)`,
 ];
 
 export async function runMigration(): Promise<{ tables: string[]; warnings: string[] }> {

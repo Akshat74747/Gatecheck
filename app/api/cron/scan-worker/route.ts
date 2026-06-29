@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { claimNextJob, failJob } from '@/lib/db/scan-jobs';
 import { runScan } from '@/lib/scanner';
+import { runPrReview } from '@/lib/review/runner';
+import { getRepoById } from '@/lib/db/repos';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Vercel Pro: 60s function timeout
@@ -37,8 +39,15 @@ export async function GET(req: NextRequest) {
     console.log(`[cron] claimed job ${job.id} (${job.job_type}) for ${job.repo_id} @ ${job.commit_sha.slice(0, 7)}`);
 
     try {
-      const result = await runScan(job);
-      results.push(result);
+      if (job.job_type === 'pr_scan') {
+        const repo = await getRepoById(job.repo_id);
+        if (!repo) throw new Error(`Repo ${job.repo_id} not found`);
+        await runPrReview(job, repo);
+        results.push({ jobId: job.id, type: 'pr_review' });
+      } else {
+        const result = await runScan(job);
+        results.push(result);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[cron] job ${job.id} failed:`, message);

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/dsql-signer": "^3.1075.0",
+    "@google/generative-ai": "^0.24.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.20.0",
     "jsonwebtoken": "^9.0.3",

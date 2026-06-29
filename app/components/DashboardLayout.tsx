@@ -12,6 +12,9 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  GitPullRequest,
+  BarChart2,
+  Key,
 } from 'lucide-react';
 
 interface Props {
@@ -54,6 +57,27 @@ export default function DashboardLayout({ children, repoId, repoName }: Props) {
       href: repoId ? `/dashboard/policies${repoQuery}` : '/dashboard/policies',
       active: pathname === '/dashboard/policies',
       disabled: !repoId,
+    },
+    {
+      label: 'Pull Requests',
+      icon: GitPullRequest,
+      href: '/prs',
+      active: pathname === '/prs' || pathname.startsWith('/prs/'),
+      disabled: false,
+    },
+    {
+      label: 'Analytics',
+      icon: BarChart2,
+      href: '/analytics',
+      active: pathname === '/analytics',
+      disabled: false,
+    },
+    {
+      label: 'API Tokens',
+      icon: Key,
+      href: '/tokens',
+      active: pathname === '/tokens',
+      disabled: false,
     },
   ];
 
