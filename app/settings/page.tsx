@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Settings, GitBranch, Zap, Copy, Check, ShieldCheck, ShieldOff, ExternalLink,
+  Settings, GitBranch, Zap, Copy, Check, ShieldCheck, ShieldOff, ExternalLink, Crown, Infinity,
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import Button from '../components/ui/Button';
@@ -68,6 +68,68 @@ export default function SettingsPage() {
         <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mt-0.5">
           Configure your GitHub App, AI provider, and repository settings
         </p>
+      </div>
+
+      {/* Plan */}
+      <div className="clay-sm px-5 py-4 mb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Crown className="w-4 h-4 text-[#fcd34d]" />
+          <p className="text-sm font-bold">Plan</p>
+        </div>
+
+        {/* Plan card */}
+        <div className="clay-pressed rounded-xl px-4 py-4 mb-3">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.15)' }}>
+              <Crown className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-extrabold text-foreground">Pro Plan</p>
+                <span
+                  className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}
+                >
+                  Active
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">$20 / month</p>
+            </div>
+          </div>
+
+          <div className="clay-sm rounded-xl px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-semibold mb-0.5">
+                  Reviews this month
+                </p>
+                <p className="text-[11px] text-muted-foreground">Resets the 1st of each month</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-bold text-foreground">0</span>
+                <span className="text-muted-foreground/40 text-sm">/</span>
+                <Infinity className="w-4 h-4 text-primary" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature list */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            'Unlimited AI PR reviews',
+            'All 6 specialist agents',
+            'CI security gate',
+            'Repo health score',
+            'Push scan on every commit',
+            'Priority support',
+          ].map(f => (
+            <div key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+              {f}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* GitHub App */}
