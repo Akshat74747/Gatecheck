@@ -46,12 +46,15 @@ export async function createScanJob(params: {
  */
 export async function claimNextJob(): Promise<ScanJob | null> {
   // Reset stale processing jobs (stuck > 5 min due to function timeout) back to pending
+  // Use epoch arithmetic instead of INTERVAL for DSQL compatibility
+  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
   await pool.query(
     `UPDATE scan_jobs
      SET status = 'pending', started_at = NULL
      WHERE status = 'processing'
-       AND started_at < NOW() - INTERVAL '5 minutes'
-       AND attempts < max_attempts`
+       AND started_at < $1
+       AND attempts < max_attempts`,
+    [staleThreshold]
   );
 
   const select = await pool.query<{ id: string }>(
