@@ -15,6 +15,9 @@ import {
   GitPullRequest,
   BarChart2,
   Key,
+  Rocket,
+  Activity,
+  Settings,
 } from 'lucide-react';
 
 interface Props {
@@ -36,49 +39,23 @@ export default function DashboardLayout({ children, repoId, repoName }: Props) {
     ? `?repoId=${repoId}&repoName=${encodeURIComponent(repoName)}`
     : '';
 
-  const navItems = [
-    {
-      label: 'Repositories',
-      icon: Home,
-      href: '/',
-      active: pathname === '/',
-      disabled: false,
-    },
-    {
-      label: 'Findings',
-      icon: ShieldAlert,
-      href: repoId ? `/dashboard${repoQuery}` : '/dashboard',
-      active: pathname === '/dashboard',
-      disabled: !repoId,
-    },
-    {
-      label: 'Policies',
-      icon: Settings2,
-      href: repoId ? `/dashboard/policies${repoQuery}` : '/dashboard/policies',
-      active: pathname === '/dashboard/policies',
-      disabled: !repoId,
-    },
-    {
-      label: 'Pull Requests',
-      icon: GitPullRequest,
-      href: '/prs',
-      active: pathname === '/prs' || pathname.startsWith('/prs/'),
-      disabled: false,
-    },
-    {
-      label: 'Analytics',
-      icon: BarChart2,
-      href: '/analytics',
-      active: pathname === '/analytics',
-      disabled: false,
-    },
-    {
-      label: 'API Tokens',
-      icon: Key,
-      href: '/tokens',
-      active: pathname === '/tokens',
-      disabled: false,
-    },
+  const navItems: Array<{
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    href: string;
+    active: boolean;
+    disabled: boolean;
+    badge?: string;
+  }> = [
+    { label: 'Getting Started', icon: Rocket,       href: '/getting-started', active: pathname === '/getting-started',           disabled: false },
+    { label: 'Repositories',    icon: Home,          href: '/',                active: pathname === '/',                           disabled: false },
+    { label: 'Findings',        icon: ShieldAlert,   href: repoId ? `/dashboard${repoQuery}` : '/dashboard', active: pathname === '/dashboard', disabled: !repoId },
+    { label: 'Policies',        icon: Settings2,     href: repoId ? `/dashboard/policies${repoQuery}` : '/dashboard/policies', active: pathname === '/dashboard/policies', disabled: !repoId },
+    { label: 'Pull Requests',   icon: GitPullRequest, href: '/prs',            active: pathname === '/prs' || pathname.startsWith('/prs/'), disabled: false },
+    { label: 'Analytics',       icon: BarChart2,     href: '/analytics',       active: pathname === '/analytics',                  disabled: false },
+    { label: 'Repo Health',     icon: Activity,      href: '/repo-health',     active: pathname.startsWith('/repo-health'),         disabled: false, badge: 'BETA' },
+    { label: 'API Tokens',      icon: Key,           href: '/tokens',          active: pathname === '/tokens',                     disabled: false },
+    { label: 'Settings',        icon: Settings,      href: '/settings',        active: pathname === '/settings',                   disabled: false },
   ];
 
   return (
@@ -132,7 +109,10 @@ export default function DashboardLayout({ children, repoId, repoName }: Props) {
               const content = (
                 <>
                   <item.icon className={`w-4 h-4 flex-shrink-0 ${item.active ? 'text-primary' : ''}`} />
-                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && <span className="flex-1">{item.label}</span>}
+                  {!collapsed && item.badge && (
+                    <span className="clay-pill text-[8px] px-1.5 py-0 text-primary font-bold">{item.badge}</span>
+                  )}
                 </>
               );
 

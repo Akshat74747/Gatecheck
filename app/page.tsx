@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Database, ShieldCheck, ShieldOff, RefreshCw, ExternalLink } from 'lucide-react';
+import { Database, ShieldCheck, ShieldOff, RefreshCw, ExternalLink, Activity } from 'lucide-react';
 import DashboardLayout from './components/DashboardLayout';
 import Button from './components/ui/Button';
 import { StatCard } from './components/ui/StatCard';
@@ -14,6 +14,7 @@ interface Repo {
   name: string;
   default_branch: string;
   is_security_enrolled: boolean;
+  finding_count: number;
 }
 
 export default function HomePage() {
@@ -64,10 +65,10 @@ export default function HomePage() {
       {/* Hero */}
       <div className="mb-8 animate-fade-in-up">
         <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 gradient-text-primary">
-          Repository Security Center
+          Repositories
         </h1>
         <p className="text-muted-foreground max-w-xl">
-          Enroll GitHub repositories to scan CI/CD workflows, Dockerfiles, and dependency files for security risks.
+          Connect GitHub repositories to enable AI-powered PR reviews and CI/CD security scanning.
         </p>
       </div>
 
@@ -83,7 +84,7 @@ export default function HomePage() {
       {/* Controls */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">
-          Connected Repositories
+          Connected Repositories ({repos.length})
         </p>
         <Button
           variant="subtle"
@@ -117,9 +118,12 @@ export default function HomePage() {
         <div className="clay p-12 text-center">
           <ShieldCheck className="w-12 h-12 text-primary/30 mx-auto mb-4" />
           <p className="font-semibold mb-1">No repositories found</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mb-4">
             Install the GitHub App on your repositories to get started.
           </p>
+          <Link href="/getting-started" className="text-primary text-sm hover:underline">
+            View Getting Started guide →
+          </Link>
         </div>
       )}
 
@@ -140,16 +144,21 @@ export default function HomePage() {
                 />
                 <div className="min-w-0">
                   <p className="font-semibold text-sm truncate">{repo.full_name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className="clay-pill text-[9px] text-muted-foreground px-2 py-0.5"
-                    >
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="clay-pill text-[9px] text-muted-foreground px-2 py-0.5">
                       {repo.default_branch}
                     </span>
                     {repo.is_security_enrolled && (
-                      <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'rgba(129,140,248,0.15)', color: '#818cf8' }}>
-                        Enrolled
+                      <span
+                        className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'rgba(129,140,248,0.15)', color: '#818cf8' }}
+                      >
+                        Auto-review on
+                      </span>
+                    )}
+                    {repo.finding_count > 0 && (
+                      <span className="text-[9px] text-muted-foreground">
+                        {repo.finding_count} finding{repo.finding_count !== 1 ? 's' : ''}
                       </span>
                     )}
                   </div>
@@ -159,12 +168,13 @@ export default function HomePage() {
               {/* Right: actions */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {repo.is_security_enrolled && (
-                  <Link
-                    href={`/dashboard?repoId=${repo.id}&repoName=${encodeURIComponent(repo.full_name)}`}
-                  >
-                    <Button variant="ghost" size="sm" icon={ExternalLink}>
-                      Findings
-                    </Button>
+                  <Link href={`/repo-health/${repo.id}`}>
+                    <Button variant="ghost" size="sm" icon={Activity}>Health</Button>
+                  </Link>
+                )}
+                {repo.is_security_enrolled && (
+                  <Link href={`/dashboard?repoId=${repo.id}&repoName=${encodeURIComponent(repo.full_name)}`}>
+                    <Button variant="ghost" size="sm" icon={ExternalLink}>Findings</Button>
                   </Link>
                 )}
                 <Button
