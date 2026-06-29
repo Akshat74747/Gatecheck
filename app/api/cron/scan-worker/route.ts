@@ -5,7 +5,7 @@ import { runPrReview } from '@/lib/review/runner';
 import { getRepoById } from '@/lib/db/repos';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60; // Vercel Pro: 60s function timeout
+export const maxDuration = 300; // Vercel Pro: up to 300s for long Gemini calls
 
 const MAX_JOBS_PER_INVOCATION = 5;
 

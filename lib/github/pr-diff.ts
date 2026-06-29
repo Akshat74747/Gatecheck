@@ -27,7 +27,7 @@ export async function fetchPrDiff(
   }
   const text = await res.text();
   // Truncate very large diffs to avoid token limits
-  return text.length > 80_000 ? text.slice(0, 80_000) + '\n[diff truncated]' : text;
+  return text.length > 40_000 ? text.slice(0, 40_000) + '\n[diff truncated]' : text;
 }
 
 export async function fetchPrMetadata(

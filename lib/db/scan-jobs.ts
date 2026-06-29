@@ -45,6 +45,15 @@ export async function createScanJob(params: {
  * (findings are deduplicated by rule+file+line; halt decision uses most-severe-wins).
  */
 export async function claimNextJob(): Promise<ScanJob | null> {
+  // Reset stale processing jobs (stuck > 5 min due to function timeout) back to pending
+  await pool.query(
+    `UPDATE scan_jobs
+     SET status = 'pending', started_at = NULL
+     WHERE status = 'processing'
+       AND started_at < NOW() - INTERVAL '5 minutes'
+       AND attempts < max_attempts`
+  );
+
   const select = await pool.query<{ id: string }>(
     `SELECT id FROM scan_jobs
      WHERE status = 'pending' AND attempts < max_attempts
