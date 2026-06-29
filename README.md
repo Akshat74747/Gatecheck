@@ -16,7 +16,7 @@
 
 ## Overview
 
-Gatecheck is a CI security scanner that runs six Gemini AI agents in parallel on every pull request, detecting vulnerabilities across security, bugs, performance, readability, best practices, and documentation. A synthesizer agent combines all findings into a single verdict with a confidence score and prioritised action list.
+Gatecheck is a CI security scanner that runs six AI agents in parallel on every pull request, detecting vulnerabilities across security, bugs, performance, readability, best practices, and documentation. A synthesizer agent combines all findings into a single verdict with a confidence score and prioritised action list.
 
 Beyond PR reviews, Gatecheck also scans pushes to enrolled branches for hardcoded secrets, insecure Docker configurations, supply-chain attack patterns in GitHub Actions workflows, and vulnerable dependencies — then writes a halt decision that a lightweight CI step can query to block the deployment before anything ships.
 
@@ -131,7 +131,7 @@ graph TB
     end
 
     subgraph Google ["Google AI"]
-        Gemini[Gemini 2.5 Flash]
+        [ 2.5 Flash]
     end
 
     Browser -->|Dashboard| App
@@ -141,7 +141,7 @@ graph TB
     Cron[Vercel Cron\nevery 60s] --> Worker
     Worker -->|Claim job| DSQL
     Worker -->|Fetch PR diff| GHApp
-    Worker -->|6 parallel calls| Gemini
+    Worker -->|6 parallel calls| 
     Worker -->|Write results| DSQL
     Actions -->|Query halt decision| HaltAPI
     HaltAPI <-->|Read findings| DSQL
@@ -153,7 +153,7 @@ graph TB
 
 ### Multi-Agent PR Review
 
-Six Gemini 2.5 Flash agents run in parallel on every pull request diff:
+Six agents run in parallel on every pull request diff:
 
 | Agent | Focus area |
 |---|---|
