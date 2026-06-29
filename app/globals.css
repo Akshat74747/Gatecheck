@@ -15,9 +15,9 @@ html {
   --card: #ffffff;
   --ring: #818cf8;
   --input: #f1f5f9;
-  --muted: #e2e8f0;
+  --muted: #cbd5e1;
   --accent: #6366f1;
-  --border: #e2e8f0;
+  --border: #cbd5e1;
   --radius: 1rem;
   --chart-1: #818cf8;
   --chart-2: #2dd4bf;
@@ -36,7 +36,7 @@ html {
   --foreground: #0f172a;
   --destructive: #ef4444;
   --card-foreground: #0f172a;
-  --muted-foreground: #64748b;
+  --muted-foreground: #374151;
   --accent-foreground: #ffffff;
   --popover-foreground: #0f172a;
   --primary-foreground: #ffffff;
