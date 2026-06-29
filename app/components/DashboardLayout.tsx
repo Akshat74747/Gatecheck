@@ -48,7 +48,7 @@ export default function DashboardLayout({ children, repoId, repoName }: Props) {
     badge?: string;
   }> = [
     { label: 'Getting Started', icon: Rocket,       href: '/getting-started', active: pathname === '/getting-started',           disabled: false },
-    { label: 'Repositories',    icon: Home,          href: '/',                active: pathname === '/',                           disabled: false },
+    { label: 'Repositories',    icon: Home,          href: '/repos',           active: pathname === '/repos',                      disabled: false },
     { label: 'Findings',        icon: ShieldAlert,   href: repoId ? `/dashboard${repoQuery}` : '/dashboard', active: pathname === '/dashboard', disabled: !repoId },
     { label: 'Policies',        icon: Settings2,     href: repoId ? `/dashboard/policies${repoQuery}` : '/dashboard/policies', active: pathname === '/dashboard/policies', disabled: !repoId },
     { label: 'Pull Requests',   icon: GitPullRequest, href: '/prs',            active: pathname === '/prs' || pathname.startsWith('/prs/'), disabled: false },
