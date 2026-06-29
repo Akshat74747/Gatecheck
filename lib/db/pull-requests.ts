@@ -26,23 +26,27 @@ export async function upsertPullRequest(params: {
   baseBranch: string;
   htmlUrl?: string;
 }): Promise<PullRequest> {
-  const result = await pool.query<PullRequest>(
+  // DSQL async indexes can't back ON CONFLICT constraints — use SELECT then INSERT/UPDATE
+  const existing = await getPrByRepoAndNumber(params.repoId, params.prNumber);
+  if (existing) {
+    const r = await pool.query<PullRequest>(
+      `UPDATE pull_requests SET
+         title=$1, author=$2, head_sha=$3, head_branch=$4,
+         base_branch=$5, html_url=$6, updated_at=NOW()
+       WHERE id=$7 RETURNING *`,
+      [params.title, params.author ?? null, params.headSha,
+       params.headBranch ?? null, params.baseBranch, params.htmlUrl ?? null, existing.id],
+    );
+    return r.rows[0];
+  }
+  const r = await pool.query<PullRequest>(
     `INSERT INTO pull_requests
        (repo_id, pr_number, title, author, head_sha, head_branch, base_branch, html_url)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-     ON CONFLICT (repo_id, pr_number) DO UPDATE SET
-       title       = EXCLUDED.title,
-       author      = EXCLUDED.author,
-       head_sha    = EXCLUDED.head_sha,
-       head_branch = EXCLUDED.head_branch,
-       base_branch = EXCLUDED.base_branch,
-       html_url    = EXCLUDED.html_url,
-       updated_at  = NOW()
-     RETURNING *`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
     [params.repoId, params.prNumber, params.title, params.author ?? null,
-     params.headSha, params.headBranch ?? null, params.baseBranch, params.htmlUrl ?? null]
+     params.headSha, params.headBranch ?? null, params.baseBranch, params.htmlUrl ?? null],
   );
-  return result.rows[0];
+  return r.rows[0];
 }
 
 export async function updatePrStatus(
