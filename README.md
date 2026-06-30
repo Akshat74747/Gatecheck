@@ -1,17 +1,16 @@
-# Gatecheck
+<div align="center">
+  <h1>Gatecheck</h1>
+  <strong>An AI-powered security gate for GitHub pull requests and CI pipelines — built around a real Aurora DSQL concurrency problem.</strong>
+</div>
 
-**An AI-powered security gate for GitHub pull requests and CI pipelines — built around a real Aurora DSQL concurrency problem.**
-
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
-[![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?style=flat&logo=google)](https://ai.google.dev)
-[![AWS Aurora DSQL](https://img.shields.io/badge/Aurora_DSQL-serverless-FF9900?style=flat&logo=amazonaws)](https://aws.amazon.com/rds/aurora/dsql/)
-[![Vercel](https://img.shields.io/badge/Vercel-deployed-black?style=flat&logo=vercel)](https://vercel.com)
-[![MIT](https://img.shields.io/badge/license-MIT-green?style=flat)](#license)
-
-**Live Demo:** https://gatecheck-theta.vercel.app
-**GitHub App:** https://github.com/apps/gate-check
-**Main repo:** https://github.com/Akshat74747/Gatecheck
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?style=flat&logo=google" alt="Gemini">
+  <img src="https://img.shields.io/badge/Aurora_DSQL-serverless-FF9900?style=flat&logo=amazonaws" alt="AWS Aurora DSQL">
+  <img src="https://img.shields.io/badge/Vercel-deployed-black?style=flat&logo=vercel" alt="Vercel">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="MIT">
+</p>
 
 ---
 
